@@ -46,7 +46,7 @@ if settings.ON_RASPI:
 
 
 def take_pictures(number_of_pictures=settings.PICTURES):
-    console.rule("[bold breen] Taking Pictures")
+    console.rule("[bold green] Taking Pictures")
     camera = gp.Camera()
     camera.init()
     for i in range(number_of_pictures):
@@ -67,7 +67,7 @@ def merge_images(basewidth=settings.BASEWITH,
                 inner_margin=settings.INNER_MARGIN,
                 bottom_margin=settings.BOTTOM_MARGIN,
                 logo=settings.LOGO):
-    console.rule("[bold breen] Merging Images")
+    console.rule("[bold green] Merging Images")
     imgs = list_files('img')
 
     num_imgs = len(imgs)
