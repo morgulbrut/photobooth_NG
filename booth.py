@@ -135,6 +135,7 @@ def clean():
 
 '''Only used when running on a RasPi'''
 def button_callback(channel):
+    GPIO.remove_event_detect(settings.LED_PIN)
     console.log(f"Button {channel} was pushed!")
     time.sleep(settings.DELAY)
     take_pictures()
@@ -148,12 +149,26 @@ def main():
     callback_obj = gp.check_result(gp.use_python_logging())
 
     if settings.ON_RASPI:
-        GPIO.setwarnings(False) # Ignore warning for now
-        GPIO.setmode(GPIO.BCM) # Use physical pin numbering
-        GPIO.setup(settings.BUTTON_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP) # Set pin 10 to be an input pin and set initial value to be pulled low>
-        GPIO.add_event_detect(settings.BUTTON_PIN,GPIO.FALLING,callback=button_callback,bouncetime=settings.BOUNCETIME) # Setup event on pin 10 rising edge
-        message = input("Press enter to quit\n\n") # Run until someone presses enter
-        GPIO.cleanup() # Clean up
+        GPIO.setwarnings(False) 
+        GPIO.setmode(GPIO.BCM) 
+        GPIO.setup(settings.BUTTON_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP) 
+        # GPIO.add_event_detect(settings.BUTTON_PIN,GPIO.FALLING,callback=button_callback,bouncetime=settings.BOUNCETIME)
+        GPIO.add_event_detect(settings.BUTTON_PIN,GPIO.FALLING,bouncetime=settings.BOUNCETIME)
+
+
+        while True:
+            time.sleep(0.25)
+            if GPIO.event_detected(settings.BUTTON_PIN):
+                GPIO.remove_event_detect(settings.BUTTON_PIN)
+                time.sleep(settings.DELAY)
+                take_pictures()
+                merge_images()
+                upload()
+                clean()
+                GPIO.add_event_detect(settings.BUTTON_PIN, GPIO.RISING, bouncetime=1)
+
+        # message = input("Press enter to quit\n\n") # Run until someone presses enter
+        # GPIO.cleanup() # Clean up
 
     else:
         take_pictures()
