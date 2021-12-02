@@ -149,6 +149,7 @@ def main():
         while True:
             time.sleep(0.25)
             if GPIO.event_detected(settings.BUTTON_PIN):
+                console.log("Button Pressed")
                 GPIO.remove_event_detect(settings.BUTTON_PIN)
                 time.sleep(settings.DELAY)
                 take_pictures()
