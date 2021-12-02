@@ -150,7 +150,7 @@ def main():
         GPIO.setwarnings(False) # Ignore warning for now
         GPIO.setmode(GPIO.BCM) # Use physical pin numbering
         GPIO.setup(settings.BUTTON_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP) # Set pin 10 to be an input pin and set initial value to be pulled low>
-        GPIO.add_event_detect(settings.BUTTON_PIN,GPIO.FALLING,callback=button_callback) # Setup event on pin 10 rising edge
+        GPIO.add_event_detect(settings.BUTTON_PIN,GPIO.FALLING,callback=button_callback,bouncetime=300) # Setup event on pin 10 rising edge
         message = input("Press enter to quit\n\n") # Run until someone presses enter
         GPIO.cleanup() # Clean up
 
