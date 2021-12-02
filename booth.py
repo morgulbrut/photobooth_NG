@@ -47,19 +47,25 @@ if settings.ON_RASPI:
 
 def take_pictures(number_of_pictures=settings.PICTURES):
     console.rule("[bold green] Taking Pictures")
-    camera = gp.Camera()
-    camera.init()
-    for i in range(number_of_pictures):
-        console.log('Capturing image')
-        file_path = camera.capture(gp.GP_CAPTURE_IMAGE)
-        console.log('Camera file path: {0}/{1}'.format(file_path.folder, file_path.name))
-        target = os.path.join('img', file_path.name)
-        console.log('Copying image to', target)
-        camera_file = camera.file_get(
-            file_path.folder, file_path.name, gp.GP_FILE_TYPE_NORMAL)
-        camera_file.save(target)
-        time.sleep(settings.INTERVAL)
-    camera.exit()
+    if settings.DRY_RUN:
+        for i in range(number_of_pictures):
+            console.log('Generating dummy image')
+            img = Image.new('RGB',(2000,1500))
+            img.save(f'img/test_{i}.png')
+    else:    
+        camera = gp.Camera()
+        camera.init()
+        for i in range(number_of_pictures):
+            console.log('Capturing image')
+            file_path = camera.capture(gp.GP_CAPTURE_IMAGE)
+            console.log('Camera file path: {0}/{1}'.format(file_path.folder, file_path.name))
+            target = os.path.join('img', file_path.name)
+            console.log('Copying image to', target)
+            camera_file = camera.file_get(
+                file_path.folder, file_path.name, gp.GP_FILE_TYPE_NORMAL)
+            camera_file.save(target)
+            time.sleep(settings.INTERVAL)
+        camera.exit()
 
 
 def merge_images(basewidth=settings.BASEWITH, 
