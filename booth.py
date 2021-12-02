@@ -46,7 +46,7 @@ if settings.ON_RASPI:
 
 
 def take_pictures(number_of_pictures=settings.PICTURES):
-    console.rule("[Bold Green] Taking Pictures")
+    console.rule("[bold breen] Taking Pictures")
     camera = gp.Camera()
     camera.init()
     for i in range(number_of_pictures):
@@ -67,7 +67,7 @@ def merge_images(basewidth=settings.BASEWITH,
                 inner_margin=settings.INNER_MARGIN,
                 bottom_margin=settings.BOTTOM_MARGIN,
                 logo=settings.LOGO):
-    console.rule("[Bold Green] Merging Images")
+    console.rule("[bold breen] Merging Images")
     imgs = list_files('img')
 
     num_imgs = len(imgs)
@@ -113,7 +113,7 @@ def list_files(directory):
     return [join(directory, f) for f in listdir(directory) if isfile(join(directory, f))]
 
 def upload(directory=settings.WEBDAV_DIR):
-    console.rule("[Bold Green] Uploading Image")
+    console.rule("[bold green] Uploading Image")
     webdav_client = Client(settings.WEBDAV_OPTIONS)
     webdav_client.mkdir(directory)
     date = datetime.now().strftime("%Y_%m_%d-%I:%M:%S_%p")
@@ -121,7 +121,7 @@ def upload(directory=settings.WEBDAV_DIR):
     webdav_client.upload_sync(remote_path=f"{directory}/img_{date}.png", local_path="output/merged_image.png")
 
 def clean():
-    console.rule("[Bold Green] Cleaning up")
+    console.rule("[bold green] Cleaning up")
     [os.remove(f) for f in list_files('img')]
     [os.remove(f) for f in list_files('output')]
 
