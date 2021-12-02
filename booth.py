@@ -15,7 +15,6 @@ except ImportError:
     print("installing Pillow")
     from pip._internal import main as pip
     pip(['install', '--user', 'Pillow'])
-    from PIL import Image, ImageOps
 
 try:
     from webdav3.client import Client
@@ -27,11 +26,14 @@ except ImportError:
 try:
     import gphoto2 as gp
 except ImportError:
-    print("installing gphoto2")
-    from pip._internal import main as pip
-    pip(['install', '--user', 'gphoto2'])
+    print("Install it with: sudo apt install python3-gphoto2")
+
 
 import settings
+
+
+from rich.console import Console
+console = Console()
 
 
 if settings.ON_RASPI:
@@ -44,15 +46,15 @@ if settings.ON_RASPI:
 
 
 def take_pictures(number_of_pictures=settings.PICTURES):
+    console.rule("[Bold Green] Taking Pictures")
     camera = gp.Camera()
     camera.init()
     for i in range(number_of_pictures):
-        print('Capturing image')
+        console.log('Capturing image')
         file_path = camera.capture(gp.GP_CAPTURE_IMAGE)
-        print(
-            'Camera file path: {0}/{1}'.format(file_path.folder, file_path.name))
+        console.log('Camera file path: {0}/{1}'.format(file_path.folder, file_path.name))
         target = os.path.join('img', file_path.name)
-        print('Copying image to', target)
+        console.log('Copying image to', target)
         camera_file = camera.file_get(
             file_path.folder, file_path.name, gp.GP_FILE_TYPE_NORMAL)
         camera_file.save(target)
@@ -65,7 +67,7 @@ def merge_images(basewidth=settings.BASEWITH,
                 inner_margin=settings.INNER_MARGIN,
                 bottom_margin=settings.BOTTOM_MARGIN,
                 logo=settings.LOGO):
-
+    console.rule("[Bold Green] Merging Images")
     imgs = list_files('img')
 
     num_imgs = len(imgs)
@@ -96,12 +98,10 @@ def merge_images(basewidth=settings.BASEWITH,
 
     ix = 0
     for i in range(cols):
-        print(f'Column {i}')
         for j in range(rows):
-            print(f'Row {j}')
             x = int(outer_margin+i*(inner_margin+image1_size[0]))
             y = int(outer_margin+(j)*(inner_margin+image1_size[1]))
-            print(f"pasting: {rotated[ix]}({ix}) at {x},{y}")
+            console.log(f"pasting: {rotated[ix]}({ix}) at {x},{y}")
             new_image.paste(rotated[ix], (x, y))
             ix += 1
     lg=Image.open(logo)
@@ -113,24 +113,26 @@ def list_files(directory):
     return [join(directory, f) for f in listdir(directory) if isfile(join(directory, f))]
 
 def upload(directory=settings.WEBDAV_DIR):
+    console.rule("[Bold Green] Uploading Image")
     webdav_client = Client(settings.WEBDAV_OPTIONS)
     webdav_client.mkdir(directory)
     date = datetime.now().strftime("%Y_%m_%d-%I:%M:%S_%p")
+    console.log(f"uploading img_{date}.png")
     webdav_client.upload_sync(remote_path=f"{directory}/img_{date}.png", local_path="output/merged_image.png")
 
 def clean():
+    console.rule("[Bold Green] Cleaning up")
     [os.remove(f) for f in list_files('img')]
     [os.remove(f) for f in list_files('output')]
 
 
 '''Only used when running on a RasPi'''
 def button_callback(channel):
-    print("Button was pushed!")        
+    console.log("Button was pushed!")        
     take_pictures()
     merge_images()
     upload()
     clean()
-
 
 def main():
     logging.basicConfig(
