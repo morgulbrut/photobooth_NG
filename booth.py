@@ -33,8 +33,8 @@ import settings
 
 
 from rich.console import Console
-console = Console()
 
+console = Console()
 
 if settings.ON_RASPI:
     try:
@@ -55,7 +55,7 @@ def take_pictures(number_of_pictures=settings.PICTURES):
     else:    
         camera = gp.Camera()
         camera.init()
-        for i in range(number_of_pictures):
+                for i in range(number_of_pictures):
             console.log('Capturing image')
             file_path = camera.capture(gp.GP_CAPTURE_IMAGE)
             console.log('Camera file path: {0}/{1}'.format(file_path.folder, file_path.name))
@@ -134,7 +134,8 @@ def clean():
 
 '''Only used when running on a RasPi'''
 def button_callback(channel):
-    console.log("Button was pushed!")        
+    console.log("Button was pushed!")
+    time.sleep(settings.DELAY)
     take_pictures()
     merge_images()
     upload()
@@ -145,15 +146,15 @@ def main():
         format='%(levelname)s: %(name)s: %(message)s', level=logging.WARNING)
     callback_obj = gp.check_result(gp.use_python_logging())
 
-    if settings.ON_RASPI:  
+    if settings.ON_RASPI:
         GPIO.setwarnings(False) # Ignore warning for now
-        GPIO.setmode(GPIO.BOARD) # Use physical pin numbering
-        GPIO.setup(10, GPIO.IN, pull_up_down=GPIO.PUD_UP) # Set pin 10 to be an input pin and set initial value to be pulled low (off)
-        GPIO.add_event_detect(10,GPIO.Falling,callback=button_callback) # Setup event on pin 10 rising edge
+        GPIO.setmode(GPIO.BCM) # Use physical pin numbering
+        GPIO.setup(4, GPIO.IN, pull_up_down=GPIO.PUD_UP) # Set pin 10 to be an input pin and set initial value to be pulled low>
+        GPIO.add_event_detect(4,GPIO.FALLING,callback=button_callback) # Setup event on pin 10 rising edge
         message = input("Press enter to quit\n\n") # Run until someone presses enter
         GPIO.cleanup() # Clean up
 
-    else:    
+    else:
         take_pictures()
         merge_images()
         upload()
@@ -161,5 +162,3 @@ def main():
 
 if __name__ == "__main__":
     sys.exit(main())
-
-
