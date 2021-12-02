@@ -1,7 +1,5 @@
 from __future__ import print_function
-from PIL import Image, ImageOps
 
-from webdav3.client import Client
 
 import logging
 import os
@@ -11,13 +9,38 @@ import sys
 import time
 from datetime import datetime
 
-import gphoto2 as gp
+try:
+    from PIL import Image, ImageOps
+except ImportError:
+    print("installing Pillow")
+    from pip._internal import main as pip
+    pip(['install', '--user', 'Pillow'])
+    from PIL import Image, ImageOps
+
+try:
+    from webdav3.client import Client
+except ImportError:
+    print("installing webdavclient3")
+    from pip._internal import main as pip
+    pip(['install', '--user', 'webdavclient3'])
+
+try:
+    import gphoto2 as gp
+except ImportError:
+    print("installing gphoto2")
+    from pip._internal import main as pip
+    pip(['install', '--user', 'gphoto2'])
 
 import settings
 
 
 if settings.ON_RASPI:
-    import RPi.GPIO as GPIO
+    try:
+        import RPi.GPIO as GPIO
+    except ImportError:
+        print("installing RPi.GPIO")
+        from pip._internal import main as pip
+        pip(['install', '--user', 'RPi.GPIO'])
 
 
 def take_pictures(number_of_pictures=settings.PICTURES):
