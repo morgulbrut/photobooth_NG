@@ -34,7 +34,6 @@ import settings
 
 
 from rich.console import Console
-
 console = Console()
 
 if settings.ON_RASPI:
@@ -132,6 +131,16 @@ def clean():
     [os.remove(f) for f in list_files('img')]
     [os.remove(f) for f in list_files('output')]
 
+def start_delay(delay=settings.DELAY):
+    if settings.ON_RASPI:
+        for i in range(6):
+            GPIO.output(settings.LED_PIN, not GPIO.input(settings.LED_PIN))
+            time.sleep(delay/10)
+        for i in range(6):
+            GPIO.output(settings.LED_PIN, not GPIO.input(settings.LED_PIN))
+            time.sleep(delay/20)
+    else:
+        time.sleep(delay)
 
 def main():
     logging.basicConfig(
@@ -141,24 +150,28 @@ def main():
     if settings.ON_RASPI:
         GPIO.setwarnings(False) 
         GPIO.setmode(GPIO.BCM) 
-        GPIO.setup(settings.BUTTON_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP) 
+        GPIO.setup(settings.BUTTON_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+        GPIO.setup(settings.LED_PIN, GPIO.OUT)
+        GPIO.output(settings.LED_PIN, GPIO.HIGH)
+
         # GPIO.add_event_detect(settings.BUTTON_PIN,GPIO.FALLING,callback=button_callback,bouncetime=settings.BOUNCETIME)
         GPIO.add_event_detect(settings.BUTTON_PIN,GPIO.FALLING)
         console.rule("[bold yellow] photobooth Ready....")
+        GPIO.output(settings.LED_PIN,GPIO.LOW)
 
         while True:
             time.sleep(0.25)
             if GPIO.event_detected(settings.BUTTON_PIN):
                 console.log("Button Pressed")
                 GPIO.remove_event_detect(settings.BUTTON_PIN)
-                time.sleep(settings.DELAY)
+                start_delay()
+                GPIO.output(settings.LED_PIN,GPIO.HIGH)
                 take_pictures()
                 merge_images()
                 upload()
                 clean()
-                console.rule("[bold yellow] photobooth Ready....")
                 GPIO.add_event_detect(settings.BUTTON_PIN, GPIO.FALLING)
-
+                GPIO.output(settings.LED_PIN,GPIO.LOW)
 
     else:
         take_pictures()
