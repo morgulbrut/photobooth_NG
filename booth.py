@@ -1,21 +1,26 @@
 from __future__ import print_function
 from PIL import Image, ImageOps
 
+from webdav3.client import Client
+
 import logging
 import os
 from os import listdir
 from os.path import isfile, join
 import sys
 import time
+from datetime import datetime
 
 import gphoto2 as gp
 
-BASEWITH = 500
-PICTURES = 9
-INTERVAL = 1
+import settings
 
 
-def take_pictures(number_of_pictures):
+if settings.ON_RASPI:
+    import RPi.GPIO as GPIO
+
+
+def take_pictures(number_of_pictures=settings.PICTURES):
     camera = gp.Camera()
     camera.init()
     for i in range(number_of_pictures):
@@ -28,13 +33,17 @@ def take_pictures(number_of_pictures):
         camera_file = camera.file_get(
             file_path.folder, file_path.name, gp.GP_FILE_TYPE_NORMAL)
         camera_file.save(target)
-        time.sleep(INTERVAL)
+        time.sleep(settings.INTERVAL)
     camera.exit()
 
 
-def merge_images(basewidth=800, outer_margin=20, inner_margin=10,bottom_margin=80,logo='logo/logo.png'):
+def merge_images(basewidth=settings.BASEWITH, 
+                outer_margin=settings.OUTER_MARGIN, 
+                inner_margin=settings.INNER_MARGIN,
+                bottom_margin=settings.BOTTOM_MARGIN,
+                logo=settings.LOGO):
 
-    imgs = ['img/'+f for f in listdir('img') if isfile(join('img', f))]
+    imgs = list_files('img')
 
     num_imgs = len(imgs)
     cols = 1
@@ -77,17 +86,49 @@ def merge_images(basewidth=800, outer_margin=20, inner_margin=10,bottom_margin=8
     logo_image.paste(lg,(width-outer_margin-lg.width,height-lg.height-inner_margin))
     Image.alpha_composite(new_image,logo_image).save("output/merged_image.png", "PNG")
 
+def list_files(directory):
+    return [join(directory, f) for f in listdir(directory) if isfile(join(directory, f))]
+
+def upload(directory=settings.WEBDAV_DIR):
+    webdav_client = Client(settings.WEBDAV_OPTIONS)
+    webdav_client.mkdir(directory)
+    date = datetime.now().strftime("%Y_%m_%d-%I:%M:%S_%p")
+    webdav_client.upload_sync(remote_path=f"{directory}/img_{date}.png", local_path="output/merged_image.png")
+
+def clean():
+    [os.remove(f) for f in list_files('img')]
+    [os.remove(f) for f in list_files('output')]
+
+
+'''Only used when running on a RasPi'''
+def button_callback(channel):
+    print("Button was pushed!")        
+    take_pictures()
+    merge_images()
+    upload()
+    clean()
+
 
 def main():
     logging.basicConfig(
         format='%(levelname)s: %(name)s: %(message)s', level=logging.WARNING)
     callback_obj = gp.check_result(gp.use_python_logging())
 
-    take_pictures(PICTURES)
-    merge_images()
+    if settings.ON_RASPI:  
+        GPIO.setwarnings(False) # Ignore warning for now
+        GPIO.setmode(GPIO.BOARD) # Use physical pin numbering
+        GPIO.setup(10, GPIO.IN, pull_up_down=GPIO.PUD_UP) # Set pin 10 to be an input pin and set initial value to be pulled low (off)
+        GPIO.add_event_detect(10,GPIO.Falling,callback=button_callback) # Setup event on pin 10 rising edge
+        message = input("Press enter to quit\n\n") # Run until someone presses enter
+        GPIO.cleanup() # Clean up
 
-    return 0
-
+    else:    
+        take_pictures()
+        merge_images()
+        upload()
+        clean()
 
 if __name__ == "__main__":
     sys.exit(main())
+
+
