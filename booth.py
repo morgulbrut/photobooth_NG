@@ -133,16 +133,6 @@ def clean():
     [os.remove(f) for f in list_files('output')]
 
 
-'''Only used when running on a RasPi'''
-def button_callback(channel):
-    GPIO.remove_event_detect(settings.LED_PIN)
-    console.log(f"Button {channel} was pushed!")
-    time.sleep(settings.DELAY)
-    take_pictures()
-    merge_images()
-    upload()
-    clean()
-
 def main():
     logging.basicConfig(
         format='%(levelname)s: %(name)s: %(message)s', level=logging.WARNING)
@@ -153,8 +143,8 @@ def main():
         GPIO.setmode(GPIO.BCM) 
         GPIO.setup(settings.BUTTON_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP) 
         # GPIO.add_event_detect(settings.BUTTON_PIN,GPIO.FALLING,callback=button_callback,bouncetime=settings.BOUNCETIME)
-        GPIO.add_event_detect(settings.BUTTON_PIN,GPIO.FALLING,bouncetime=settings.BOUNCETIME)
-
+        GPIO.add_event_detect(settings.BUTTON_PIN,GPIO.FALLING)
+        console.rule("[bold yellow] photobooth Ready....")
 
         while True:
             time.sleep(0.25)
@@ -165,10 +155,9 @@ def main():
                 merge_images()
                 upload()
                 clean()
-                GPIO.add_event_detect(settings.BUTTON_PIN, GPIO.RISING, bouncetime=1)
+                console.rule("[bold yellow] photobooth Ready....")
+                GPIO.add_event_detect(settings.BUTTON_PIN, GPIO.FALLING)
 
-        # message = input("Press enter to quit\n\n") # Run until someone presses enter
-        # GPIO.cleanup() # Clean up
 
     else:
         take_pictures()
