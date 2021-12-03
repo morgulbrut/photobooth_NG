@@ -9,6 +9,8 @@ from os.path import isfile, join
 import sys
 import time
 from datetime import datetime
+import socket
+import requests
 
 import colorama
 
@@ -107,8 +109,8 @@ def merge_images(basewidth=settings.BASEWITH,
     
     try:
         image1_size = rotated[0].size
-    except IndexError:
-        console.log("Images not found")
+    except IndexError as e:
+        console.log(e)
         console.save_text(f'logs/{date}.text')
         sys.exit(1)
 
@@ -138,10 +140,19 @@ def list_files(directory):
 def upload(directory=settings.WEBDAV_DIR):
     console.line()
     console.rule("[bold green] Uploading Image")
-    webdav_client = Client(settings.WEBDAV_OPTIONS)
-    webdav_client.mkdir(directory)
-    console.log(f"uploading img_{date}.png")
-    webdav_client.upload_sync(remote_path=f"{directory}/img_{date}.png", local_path="output/merged_image.png")
+    try:
+        webdav_client = Client(settings.WEBDAV_OPTIONS)
+        webdav_client.mkdir(directory)
+        console.log(f"uploading img_{date}.png")
+        webdav_client.upload_sync(remote_path=f"{directory}/img_{date}.png", local_path="output/merged_image.png")
+    except socket.gaierror as e:
+        console.log(e)
+        console.save_text(f'logs/{date}.text')
+        sys.exit(2)
+    except requests.exceptions.ConnectionError as e: 
+        console.log(e)
+        console.save_text(f'logs/{date}.text')
+        sys.exit(2)
 
 def clean():
     console.line()
