@@ -194,17 +194,23 @@ def main():
         GPIO.output(settings.LED_PIN,GPIO.LOW)
 
         while True:
-            time.sleep(0.25)
-            if GPIO.event_detected(settings.BUTTON_PIN):
-                console.log("Button Pressed")
-                GPIO.remove_event_detect(settings.BUTTON_PIN)
-                GPIO.output(settings.LED_PIN,GPIO.HIGH)
-                take_pictures()
-                merge_images()
-                upload()
-                clean()
-                GPIO.add_event_detect(settings.BUTTON_PIN, GPIO.FALLING)
-                GPIO.output(settings.LED_PIN,GPIO.LOW)
+            try:
+                time.sleep(0.25)
+                if GPIO.event_detected(settings.BUTTON_PIN):
+                    console.log("Button Pressed")
+                    GPIO.remove_event_detect(settings.BUTTON_PIN)
+                    GPIO.output(settings.LED_PIN,GPIO.HIGH)
+                    take_pictures()
+                    merge_images()
+                    upload()
+                    clean()
+                    GPIO.add_event_detect(settings.BUTTON_PIN, GPIO.FALLING)
+                    GPIO.output(settings.LED_PIN,GPIO.LOW)
+            except KeyboardInterrupt:
+                console.rule("[bold red] photobooth Stopped")
+                GPIO.cleanup()  
+                sys.exit(0)
+
 
 
     else:
