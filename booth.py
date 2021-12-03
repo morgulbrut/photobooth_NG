@@ -10,6 +10,8 @@ import sys
 import time
 from datetime import datetime
 
+import colorama
+
 try:
     from PIL import Image, ImageOps
 except ImportError:
@@ -34,7 +36,9 @@ import settings
 
 
 from rich.console import Console
-console = Console()
+from rich.logging import RichHandler
+console = Console(record=True)
+date = datetime.now().strftime("%Y_%m_%d-%I:%M:%S_%p")
 
 if settings.ON_RASPI:
     try:
@@ -48,26 +52,32 @@ if settings.ON_RASPI:
 def take_pictures(number_of_pictures=settings.PICTURES):
     console.line()
     console.rule("[bold green] Taking Pictures")
+    date = datetime.now().strftime("%Y_%m_%d-%I:%M:%S_%p")
+    start_delay()
     if settings.DRY_RUN:
         for i in range(number_of_pictures):
             console.log('Generating dummy image')
             img = Image.new('RGB',(2000,1500))
             img.save(f'img/test_{i}.png')
-    else:    
-        camera = gp.Camera()
-        camera.init()
-        for i in range(number_of_pictures):
-            console.log('Capturing image')
-            file_path = camera.capture(gp.GP_CAPTURE_IMAGE)
-            console.log('Camera file path: {0}/{1}'.format(file_path.folder, file_path.name))
-            target = os.path.join('img', file_path.name)
-            console.log('Copying image to', target)
-            camera_file = camera.file_get(
-                file_path.folder, file_path.name, gp.GP_FILE_TYPE_NORMAL)
-            camera_file.save(target)
-            time.sleep(settings.INTERVAL)
-        camera.exit()
-
+    else:
+        try:    
+            camera = gp.Camera()
+            camera.init()
+            for i in range(number_of_pictures):
+                console.log('Capturing image')
+                file_path = camera.capture(gp.GP_CAPTURE_IMAGE)
+                console.log('Camera file path: {0}/{1}'.format(file_path.folder, file_path.name))
+                target = os.path.join('img', file_path.name)
+                console.log('Copying image to', target)
+                camera_file = camera.file_get(
+                    file_path.folder, file_path.name, gp.GP_FILE_TYPE_NORMAL)
+                camera_file.save(target)
+                time.sleep(settings.INTERVAL)
+            camera.exit()
+        except gp.GPhoto2Error:
+            console.log("Could not detect any camera")
+            console.save_text(f'logs/{date}.text')
+            sys.exit(1)
 
 def merge_images(basewidth=settings.BASEWITH, 
                 outer_margin=settings.OUTER_MARGIN, 
@@ -94,8 +104,14 @@ def merge_images(basewidth=settings.BASEWITH,
         i_t = Image.open(img)
         i_t.thumbnail((basewidth, basewidth), Image.ANTIALIAS)
         rotated.append(ImageOps.exif_transpose(i_t))
+    
+    try:
+        image1_size = rotated[0].size
+    except IndexError:
+        console.log("Images not found")
+        console.save_text(f'logs/{date}.text')
+        sys.exit(1)
 
-    image1_size = rotated[0].size
 
     width = int(cols*image1_size[0]+2*outer_margin+(cols-1)*inner_margin)
     height = int(rows*image1_size[1]+outer_margin+(rows-1)*inner_margin+bottom_margin)
@@ -124,7 +140,6 @@ def upload(directory=settings.WEBDAV_DIR):
     console.rule("[bold green] Uploading Image")
     webdav_client = Client(settings.WEBDAV_OPTIONS)
     webdav_client.mkdir(directory)
-    date = datetime.now().strftime("%Y_%m_%d-%I:%M:%S_%p")
     console.log(f"uploading img_{date}.png")
     webdav_client.upload_sync(remote_path=f"{directory}/img_{date}.png", local_path="output/merged_image.png")
 
@@ -146,10 +161,14 @@ def start_delay(delay=settings.DELAY):
         time.sleep(delay)
 
 def main():
+    
+    FORMAT = "%(message)s"
     logging.basicConfig(
-        format='%(levelname)s: %(name)s: %(message)s', level=logging.WARNING)
+        level=logging.WARNING, format=FORMAT, datefmt="[%X]", handlers=[RichHandler()]
+    )
+    log = logging.getLogger("rich")
     callback_obj = gp.check_result(gp.use_python_logging())
-
+    
     if settings.ON_RASPI:
         GPIO.setwarnings(False) 
         GPIO.setmode(GPIO.BCM) 
@@ -168,7 +187,6 @@ def main():
             if GPIO.event_detected(settings.BUTTON_PIN):
                 console.log("Button Pressed")
                 GPIO.remove_event_detect(settings.BUTTON_PIN)
-                start_delay()
                 GPIO.output(settings.LED_PIN,GPIO.HIGH)
                 take_pictures()
                 merge_images()
@@ -177,11 +195,15 @@ def main():
                 GPIO.add_event_detect(settings.BUTTON_PIN, GPIO.FALLING)
                 GPIO.output(settings.LED_PIN,GPIO.LOW)
 
+
     else:
         take_pictures()
         merge_images()
         upload()
         clean()
+        if settings.LOGGING:
+            console.save_text(f'logs/{date}.text')
+
 
 if __name__ == "__main__":
     sys.exit(main())
