@@ -207,6 +207,7 @@ def main():
                     GPIO.add_event_detect(settings.BUTTON_PIN, GPIO.FALLING)
                     GPIO.output(settings.LED_PIN,GPIO.LOW)
             except KeyboardInterrupt:
+                console.line()
                 console.rule("[bold red] photobooth Stopped")
                 GPIO.cleanup()  
                 sys.exit(0)
