@@ -46,6 +46,7 @@ if settings.ON_RASPI:
 
 
 def take_pictures(number_of_pictures=settings.PICTURES):
+    console.line()
     console.rule("[bold green] Taking Pictures")
     if settings.DRY_RUN:
         for i in range(number_of_pictures):
@@ -119,6 +120,7 @@ def list_files(directory):
     return [join(directory, f) for f in listdir(directory) if isfile(join(directory, f))]
 
 def upload(directory=settings.WEBDAV_DIR):
+    console.line()
     console.rule("[bold green] Uploading Image")
     webdav_client = Client(settings.WEBDAV_OPTIONS)
     webdav_client.mkdir(directory)
@@ -127,6 +129,7 @@ def upload(directory=settings.WEBDAV_DIR):
     webdav_client.upload_sync(remote_path=f"{directory}/img_{date}.png", local_path="output/merged_image.png")
 
 def clean():
+    console.line()
     console.rule("[bold green] Cleaning up")
     [os.remove(f) for f in list_files('img')]
     [os.remove(f) for f in list_files('output')]
@@ -156,6 +159,7 @@ def main():
 
         # GPIO.add_event_detect(settings.BUTTON_PIN,GPIO.FALLING,callback=button_callback,bouncetime=settings.BOUNCETIME)
         GPIO.add_event_detect(settings.BUTTON_PIN,GPIO.FALLING)
+        console.line()
         console.rule("[bold yellow] photobooth Ready....")
         GPIO.output(settings.LED_PIN,GPIO.LOW)
 
