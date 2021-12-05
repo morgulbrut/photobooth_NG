@@ -28,11 +28,6 @@ except ImportError:
     from pip._internal import main as pip
     pip(['install', '--user', 'webdavclient3'])
 
-try:
-    import gphoto2 as gp
-except ImportError:
-    print("Install it with: sudo apt install python3-gphoto2")
-
 
 import settings
 
@@ -56,12 +51,23 @@ def take_pictures(number_of_pictures=settings.PICTURES):
     console.rule("[bold green] Taking Pictures")
     date = datetime.now().strftime("%Y_%m_%d-%I:%M:%S_%p")
     start_delay()
-    if settings.DRY_RUN:
+    if settings.CAMERA == 'picamera':
+        console.log("Using picamera")
+        from picamera import PiCamera
+        camera = PiCamera()
+        camera.resolution = (2592,1944)
         for i in range(number_of_pictures):
-            console.log('Generating dummy image')
-            img = Image.new('RGB',(2000,1500))
-            img.save(f'img/test_{i}.png')
-    else:
+            console.log('Capturing image')
+            camera.capture(f'img/picam_{i}.png')
+            time.sleep(settings.INTERVAL)
+        camera.close()
+
+    elif settings.CAMERA == 'gphoto2':
+        console.log("Using gphoto2")
+        try:
+            import gphoto2 as gp
+        except ImportError:
+            print("Install it with: sudo apt install python3-gphoto2")
         try:    
             camera = gp.Camera()
             camera.init()
@@ -80,6 +86,12 @@ def take_pictures(number_of_pictures=settings.PICTURES):
             console.log("Could not detect any camera")
             console.save_text(f'logs/{date}.text')
             sys.exit(1)
+
+    else:
+        for i in range(number_of_pictures):
+            console.log('Generating dummy image')
+            img = Image.new('RGB',(2000,1500))
+            img.save(f'img/test_{i}.png')
 
 def merge_images(basewidth=settings.BASEWITH, 
                 outer_margin=settings.OUTER_MARGIN, 
