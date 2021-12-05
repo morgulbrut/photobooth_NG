@@ -51,7 +51,7 @@ def take_pictures(number_of_pictures=settings.PICTURES):
         console.log("Using picamera")
         from picamera import PiCamera
         camera = PiCamera()
-        camera.resolution = (2592, 1944)
+        camera.resolution = settings.PICAMERA_RESOLUTION
         for i in range(number_of_pictures):
             console.log('Capturing image')
             camera.capture(f'img/picam_{i}.png')
