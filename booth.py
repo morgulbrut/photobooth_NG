@@ -50,6 +50,12 @@ def take_pictures(number_of_pictures=settings.PICTURES):
     elif settings.CAMERA == 'gphoto2':
         console.log("Using gphoto2")
         import gphoto2 as gp
+        FORMAT = "%(message)s"
+        logging.basicConfig(
+            level=logging.WARNING, format=FORMAT, datefmt="[%X]", handlers=[RichHandler()]
+        )
+        log = logging.getLogger("rich")
+        callback_obj = gp.check_result(gp.use_python_logging())
         try:
             camera = gp.Camera()
             camera.init()
@@ -176,13 +182,6 @@ def start_delay(delay=settings.DELAY):
 
 
 def main():
-
-    FORMAT = "%(message)s"
-    logging.basicConfig(
-        level=logging.WARNING, format=FORMAT, datefmt="[%X]", handlers=[RichHandler()]
-    )
-    log = logging.getLogger("rich")
-    callback_obj = gp.check_result(gp.use_python_logging())
 
     if settings.ON_RASPI:
         GPIO.setwarnings(False)
