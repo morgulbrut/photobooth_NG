@@ -12,19 +12,8 @@ from datetime import datetime
 import socket
 import requests
 
-try:
-    from PIL import Image, ImageOps
-except ImportError:
-    print("installing Pillow")
-    from pip._internal import main as pip
-    pip(['install', '--user', 'Pillow'])
-
-try:
-    from webdav3.client import Client
-except ImportError:
-    print("installing webdavclient3")
-    from pip._internal import main as pip
-    pip(['install', '--user', 'webdavclient3'])
+from PIL import Image, ImageOps
+from webdav3.client import Client
 
 import settings
 
@@ -60,10 +49,7 @@ def take_pictures(number_of_pictures=settings.PICTURES):
 
     elif settings.CAMERA == 'gphoto2':
         console.log("Using gphoto2")
-        try:
-            import gphoto2 as gp
-        except ImportError:
-            print("Install it with: sudo apt install python3-gphoto2")
+        import gphoto2 as gp
         try:
             camera = gp.Camera()
             camera.init()
