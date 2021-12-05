@@ -43,7 +43,9 @@ def take_pictures(number_of_pictures=settings.PICTURES):
         camera.resolution = settings.PICAMERA_RESOLUTION
         for i in range(number_of_pictures):
             console.log('Capturing image')
+            PIO.output(settings.LED_PIN, GPIO.LOW)
             camera.capture(f'img/picam_{i}.png')
+            GPIO.output(settings.LED_PIN, GPIO.HIGH)
             time.sleep(settings.INTERVAL)
         camera.close()
 
@@ -61,7 +63,9 @@ def take_pictures(number_of_pictures=settings.PICTURES):
             camera.init()
             for i in range(number_of_pictures):
                 console.log('Capturing image')
+                GPIO.output(settings.LED_PIN, GPIO.LOW)
                 file_path = camera.capture(gp.GP_CAPTURE_IMAGE)
+                GPIO.output(settings.LED_PIN, GPIO.HIGH)
                 console.log(
                     'Camera file path: {0}/{1}'.format(file_path.folder, file_path.name))
                 target = os.path.join('img', file_path.name)
