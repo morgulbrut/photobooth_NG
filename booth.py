@@ -43,7 +43,7 @@ def take_pictures(number_of_pictures=settings.PICTURES):
         camera.resolution = settings.PICAMERA_RESOLUTION
         for i in range(number_of_pictures):
             console.log('Capturing image')
-            PIO.output(settings.LED_PIN, GPIO.LOW)
+            GPIO.output(settings.LED_PIN, GPIO.LOW)
             camera.capture(f'img/picam_{i}.png')
             GPIO.output(settings.LED_PIN, GPIO.HIGH)
             time.sleep(settings.INTERVAL)
