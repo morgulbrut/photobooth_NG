@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 
 from __future__ import print_function
+import serial
 
 import logging
 import os
@@ -36,6 +37,9 @@ def take_pictures(number_of_pictures=settings.PICTURES):
     console.line()
     console.rule("[bold green] Taking Pictures")
     date = datetime.now().strftime("%Y_%m_%d-%I:%M:%S_%p")
+    flash = serial.Serial()
+    flash.baudrate = 115200
+    flash.port = settings.RINGLIGHT_PORT
     start_delay()
     if settings.CAMERA == 'picamera':
         console.log("Using picamera")
@@ -45,8 +49,10 @@ def take_pictures(number_of_pictures=settings.PICTURES):
         for i in range(number_of_pictures):
             console.log('Capturing image')
             GPIO.output(settings.LED_PIN, GPIO.LOW)
+            flash.write(settings.RINGLIGHT_ON)
             camera.capture(f'img/picam_{i}.png')
             GPIO.output(settings.LED_PIN, GPIO.HIGH)
+            flash.write(settings.RINGLIGHT_OFF)
             time.sleep(settings.INTERVAL)
         camera.close()
 
