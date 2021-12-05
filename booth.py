@@ -12,8 +12,6 @@ from datetime import datetime
 import socket
 import requests
 
-import colorama
-
 try:
     from PIL import Image, ImageOps
 except ImportError:
@@ -28,9 +26,7 @@ except ImportError:
     from pip._internal import main as pip
     pip(['install', '--user', 'webdavclient3'])
 
-
 import settings
-
 
 from rich.console import Console
 from rich.logging import RichHandler
@@ -55,7 +51,7 @@ def take_pictures(number_of_pictures=settings.PICTURES):
         console.log("Using picamera")
         from picamera import PiCamera
         camera = PiCamera()
-        camera.resolution = (2592,1944)
+        camera.resolution = (2592, 1944)
         for i in range(number_of_pictures):
             console.log('Capturing image')
             camera.capture(f'img/picam_{i}.png')
@@ -68,13 +64,14 @@ def take_pictures(number_of_pictures=settings.PICTURES):
             import gphoto2 as gp
         except ImportError:
             print("Install it with: sudo apt install python3-gphoto2")
-        try:    
+        try:
             camera = gp.Camera()
             camera.init()
             for i in range(number_of_pictures):
                 console.log('Capturing image')
                 file_path = camera.capture(gp.GP_CAPTURE_IMAGE)
-                console.log('Camera file path: {0}/{1}'.format(file_path.folder, file_path.name))
+                console.log(
+                    'Camera file path: {0}/{1}'.format(file_path.folder, file_path.name))
                 target = os.path.join('img', file_path.name)
                 console.log('Copying image to', target)
                 camera_file = camera.file_get(
@@ -90,14 +87,15 @@ def take_pictures(number_of_pictures=settings.PICTURES):
     else:
         for i in range(number_of_pictures):
             console.log('Generating dummy image')
-            img = Image.new('RGB',(2000,1500))
+            img = Image.new('RGB', (2000, 1500))
             img.save(f'img/test_{i}.png')
 
-def merge_images(basewidth=settings.BASEWITH, 
-                outer_margin=settings.OUTER_MARGIN, 
-                inner_margin=settings.INNER_MARGIN,
-                bottom_margin=settings.BOTTOM_MARGIN,
-                logo=settings.LOGO):
+
+def merge_images(basewidth=settings.BASEWITH,
+                 outer_margin=settings.OUTER_MARGIN,
+                 inner_margin=settings.INNER_MARGIN,
+                 bottom_margin=settings.BOTTOM_MARGIN,
+                 logo=settings.LOGO):
     console.rule("[bold green] Merging Images")
     imgs = list_files('img')
 
@@ -118,7 +116,7 @@ def merge_images(basewidth=settings.BASEWITH,
         i_t = Image.open(img)
         i_t.thumbnail((basewidth, basewidth), Image.ANTIALIAS)
         rotated.append(ImageOps.exif_transpose(i_t))
-    
+
     try:
         image1_size = rotated[0].size
     except IndexError as e:
@@ -126,12 +124,12 @@ def merge_images(basewidth=settings.BASEWITH,
         console.save_text(f'logs/{date}.text')
         sys.exit(1)
 
-
     width = int(cols*image1_size[0]+2*outer_margin+(cols-1)*inner_margin)
-    height = int(rows*image1_size[1]+outer_margin+(rows-1)*inner_margin+bottom_margin)
+    height = int(rows*image1_size[1]+outer_margin +
+                 (rows-1)*inner_margin+bottom_margin)
 
     new_image = Image.new('RGBA', (width, height), (255, 255, 255, 255))
-    logo_image = Image.new('RGBA', (width, height), (0, 0, 0,0))
+    logo_image = Image.new('RGBA', (width, height), (0, 0, 0, 0))
 
     ix = 0
     for i in range(cols):
@@ -141,13 +139,17 @@ def merge_images(basewidth=settings.BASEWITH,
             console.log(f"pasting: {rotated[ix]}({ix}) at {x},{y}")
             new_image.paste(rotated[ix], (x, y))
             ix += 1
-    lg=Image.open(logo)
+    lg = Image.open(logo)
 
-    logo_image.paste(lg,(width-outer_margin-lg.width,height-lg.height-inner_margin))
-    Image.alpha_composite(new_image,logo_image).save("output/merged_image.png", "PNG")
+    logo_image.paste(lg, (width-outer_margin-lg.width,
+                     height-lg.height-inner_margin))
+    Image.alpha_composite(new_image, logo_image).save(
+        "output/merged_image.png", "PNG")
+
 
 def list_files(directory):
     return [join(directory, f) for f in listdir(directory) if isfile(join(directory, f))]
+
 
 def upload(directory=settings.WEBDAV_DIR):
     console.line()
@@ -156,21 +158,24 @@ def upload(directory=settings.WEBDAV_DIR):
         webdav_client = Client(settings.WEBDAV_OPTIONS)
         webdav_client.mkdir(directory)
         console.log(f"uploading img_{date}.png")
-        webdav_client.upload_sync(remote_path=f"{directory}/img_{date}.png", local_path="output/merged_image.png")
+        webdav_client.upload_sync(
+            remote_path=f"{directory}/img_{date}.png", local_path="output/merged_image.png")
     except socket.gaierror as e:
         console.log(e)
         console.save_text(f'logs/{date}.text')
         sys.exit(2)
-    except requests.exceptions.ConnectionError as e: 
+    except requests.exceptions.ConnectionError as e:
         console.log(e)
         console.save_text(f'logs/{date}.text')
         sys.exit(2)
+
 
 def clean():
     console.line()
     console.rule("[bold green] Cleaning up")
     [os.remove(f) for f in list_files('img')]
     [os.remove(f) for f in list_files('output')]
+
 
 def start_delay(delay=settings.DELAY):
     if settings.ON_RASPI:
@@ -183,27 +188,28 @@ def start_delay(delay=settings.DELAY):
     else:
         time.sleep(delay)
 
+
 def main():
-    
+
     FORMAT = "%(message)s"
     logging.basicConfig(
         level=logging.WARNING, format=FORMAT, datefmt="[%X]", handlers=[RichHandler()]
     )
     log = logging.getLogger("rich")
     callback_obj = gp.check_result(gp.use_python_logging())
-    
+
     if settings.ON_RASPI:
-        GPIO.setwarnings(False) 
-        GPIO.setmode(GPIO.BCM) 
+        GPIO.setwarnings(False)
+        GPIO.setmode(GPIO.BCM)
         GPIO.setup(settings.BUTTON_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP)
         GPIO.setup(settings.LED_PIN, GPIO.OUT)
         GPIO.output(settings.LED_PIN, GPIO.HIGH)
 
         # GPIO.add_event_detect(settings.BUTTON_PIN,GPIO.FALLING,callback=button_callback,bouncetime=settings.BOUNCETIME)
-        GPIO.add_event_detect(settings.BUTTON_PIN,GPIO.FALLING)
+        GPIO.add_event_detect(settings.BUTTON_PIN, GPIO.FALLING)
         console.line()
         console.rule("[bold yellow] photobooth Ready....")
-        GPIO.output(settings.LED_PIN,GPIO.LOW)
+        GPIO.output(settings.LED_PIN, GPIO.LOW)
 
         while True:
             try:
@@ -211,20 +217,18 @@ def main():
                 if GPIO.event_detected(settings.BUTTON_PIN):
                     console.log("Button Pressed")
                     GPIO.remove_event_detect(settings.BUTTON_PIN)
-                    GPIO.output(settings.LED_PIN,GPIO.HIGH)
+                    GPIO.output(settings.LED_PIN, GPIO.HIGH)
                     take_pictures()
                     merge_images()
                     upload()
                     clean()
                     GPIO.add_event_detect(settings.BUTTON_PIN, GPIO.FALLING)
-                    GPIO.output(settings.LED_PIN,GPIO.LOW)
+                    GPIO.output(settings.LED_PIN, GPIO.LOW)
             except KeyboardInterrupt:
                 console.line()
                 console.rule("[bold red] photobooth Stopped")
-                GPIO.cleanup()  
+                GPIO.cleanup()
                 sys.exit(0)
-
-
 
     else:
         take_pictures()
