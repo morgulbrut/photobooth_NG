@@ -32,6 +32,7 @@ if settings.ON_RASPI:
 
 
 def take_pictures(number_of_pictures=settings.PICTURES):
+    global date
     console.line()
     console.rule("[bold green] Taking Pictures")
     date = datetime.now().strftime("%Y_%m_%d-%I:%M:%S_%p")
