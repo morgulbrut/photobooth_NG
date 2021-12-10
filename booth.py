@@ -177,8 +177,8 @@ def upload(directory=settings.WEBDAV_DIR):
 def clean():
     console.line()
     console.rule("[bold green] Cleaning up")
-    [os.remove(f) for f in list_files('img')]
-    [os.remove(f) for f in list_files('output')]
+    [os.remove(f) for f in list_files(f'{settings.INSTALLATION_PATH}/img')]
+    [os.remove(f) for f in list_files(f'{settings.INSTALLATION_PATH}/output')]
 
 
 def start_delay(delay=settings.DELAY):
