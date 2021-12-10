@@ -84,7 +84,7 @@ def take_pictures(number_of_pictures=settings.PICTURES):
             camera.exit()
         except gp.GPhoto2Error:
             console.log("Could not detect any camera")
-            console.save_text(f'{settings.INSTALLATION_PATH}logs/{date}.text')
+            console.save_text(f'{settings.INSTALLATION_PATH}/logs/{date}.text')
             sys.exit(1)
 
     else:
