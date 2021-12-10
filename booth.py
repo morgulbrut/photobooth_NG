@@ -40,6 +40,8 @@ def take_pictures(number_of_pictures=settings.PICTURES):
     flash = serial.Serial()
     flash.baudrate = 115200
     flash.port = settings.RINGLIGHT_PORT
+    flash.open()
+
     start_delay()
     if settings.CAMERA == 'picamera':
         console.log("Using picamera")
@@ -92,6 +94,7 @@ def take_pictures(number_of_pictures=settings.PICTURES):
             console.log('Generating dummy image')
             img = Image.new('RGB', (2000, 1500))
             img.save(f'img/test_{i}.png')
+    flash.close()
 
 
 def merge_images(basewidth=settings.BASEWITH,
