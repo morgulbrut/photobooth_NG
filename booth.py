@@ -72,9 +72,11 @@ def take_pictures(number_of_pictures=settings.PICTURES):
             camera.init()
             for i in range(number_of_pictures):
                 console.log('Capturing image')
+                flash.write(settings.RINGLIGHT_ON)
                 GPIO.output(settings.LED_PIN, GPIO.LOW)
                 file_path = camera.capture(gp.GP_CAPTURE_IMAGE)
                 GPIO.output(settings.LED_PIN, GPIO.HIGH)
+                flash.write(settings.RINGLIGHT_OFF)
                 console.log(
                     'Camera file path: {0}/{1}'.format(file_path.folder, file_path.name))
                 target = os.path.join('img', file_path.name)
