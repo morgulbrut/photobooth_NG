@@ -24,12 +24,8 @@ console = Console(record=True)
 date = datetime.now().strftime("%Y_%m_%d-%I:%M:%S_%p")
 
 if settings.ON_RASPI:
-    try:
-        import RPi.GPIO as GPIO
-    except ImportError:
-        print("installing RPi.GPIO")
-        from pip._internal import main as pip
-        pip(['install', '--user', 'RPi.GPIO'])
+    import RPi.GPIO as GPIO
+
 
 
 def take_pictures(number_of_pictures=settings.PICTURES):
@@ -52,7 +48,7 @@ def take_pictures(number_of_pictures=settings.PICTURES):
             console.log('Capturing image')
             GPIO.output(settings.LED_PIN, GPIO.LOW)
             flash.write(settings.RINGLIGHT_ON)
-            camera.capture(f'img/picam_{i}.png')
+            camera.capture(f'{settings.INSTALLATION_PATH}/img/picam_{i}.png')
             GPIO.output(settings.LED_PIN, GPIO.HIGH)
             flash.write(settings.RINGLIGHT_OFF)
             time.sleep(settings.INTERVAL)
@@ -79,7 +75,7 @@ def take_pictures(number_of_pictures=settings.PICTURES):
                 flash.write(settings.RINGLIGHT_OFF)
                 console.log(
                     'Camera file path: {0}/{1}'.format(file_path.folder, file_path.name))
-                target = os.path.join('img', file_path.name)
+                target = os.path.join(f'{settings.INSTALLATION_PATH}/img', file_path.name)
                 console.log('Copying image to', target)
                 camera_file = camera.file_get(
                     file_path.folder, file_path.name, gp.GP_FILE_TYPE_NORMAL)
@@ -88,14 +84,14 @@ def take_pictures(number_of_pictures=settings.PICTURES):
             camera.exit()
         except gp.GPhoto2Error:
             console.log("Could not detect any camera")
-            console.save_text(f'logs/{date}.text')
+            console.save_text(f'{settings.INSTALLATION_PATH}logs/{date}.text')
             sys.exit(1)
 
     else:
         for i in range(number_of_pictures):
             console.log('Generating dummy image')
             img = Image.new('RGB', (2000, 1500))
-            img.save(f'img/test_{i}.png')
+            img.save(f'{settings.INSTALLATION_PATH}/img/test_{i}.png')
     flash.close()
 
 
@@ -105,7 +101,7 @@ def merge_images(basewidth=settings.BASEWITH,
                  bottom_margin=settings.BOTTOM_MARGIN,
                  logo=settings.LOGO):
     console.rule("[bold green] Merging Images")
-    imgs = list_files('img')
+    imgs = list_files(f'{settings.INSTALLATION_PATH}/img')
 
     num_imgs = len(imgs)
     cols = 1
@@ -129,7 +125,7 @@ def merge_images(basewidth=settings.BASEWITH,
         image1_size = rotated[0].size
     except IndexError as e:
         console.log(e)
-        console.save_text(f'logs/{date}.text')
+        console.save_text(f'{settings.INSTALLATION_PATH}/logs/{date}.text')
         sys.exit(1)
 
     width = int(cols*image1_size[0]+2*outer_margin+(cols-1)*inner_margin)
@@ -152,7 +148,7 @@ def merge_images(basewidth=settings.BASEWITH,
     logo_image.paste(lg, (width-outer_margin-lg.width,
                      height-lg.height-inner_margin))
     Image.alpha_composite(new_image, logo_image).save(
-        "output/merged_image.png", "PNG")
+        f"{settings.INSTALLATION_PATH}/output/merged_image.png", "PNG")
 
 
 def list_files(directory):
@@ -167,14 +163,14 @@ def upload(directory=settings.WEBDAV_DIR):
         webdav_client.mkdir(directory)
         console.log(f"uploading img_{date}.png")
         webdav_client.upload_sync(
-            remote_path=f"{directory}/img_{date}.png", local_path="output/merged_image.png")
+            remote_path=f"{directory}/img_{date}.png", local_path=f"{settings.INSTALLATION_PATH}/output/merged_image.png")
     except socket.gaierror as e:
         console.log(e)
-        console.save_text(f'logs/{date}.text')
+        console.save_text(f'{settings.INSTALLATION_PATH}/logs/{date}.text')
         sys.exit(2)
     except requests.exceptions.ConnectionError as e:
         console.log(e)
-        console.save_text(f'logs/{date}.text')
+        console.save_text(f'{settings.INSTALLATION_PATH}/logs/{date}.text')
         sys.exit(2)
 
 
@@ -237,7 +233,7 @@ def main():
         upload()
         clean()
         if settings.LOGGING:
-            console.save_text(f'logs/{date}.text')
+            console.save_text(f'{settings.INSTALLATION_PATH}/logs/{date}.text')
 
 
 if __name__ == "__main__":
