@@ -119,7 +119,10 @@ def merge_images(basewidth=settings.BASEWITH,
     for img in imgs:
         i_t = Image.open(img)
         i_t.thumbnail((basewidth, basewidth), Image.ANTIALIAS)
-        rotated.append(ImageOps.exif_transpose(i_t))
+        if(settings.CAMERA_TOPMOUNT):
+            rotated.append(ImageOps.flip(i_t))
+        else:
+            rotated.append(ImageOps.exif_transpose(i_t))
 
     try:
         image1_size = rotated[0].size
@@ -132,7 +135,7 @@ def merge_images(basewidth=settings.BASEWITH,
     height = int(rows*image1_size[1]+outer_margin +
                  (rows-1)*inner_margin+bottom_margin)
 
-    new_image = Image.new('RGBA', (width, height), (255, 255, 255, 255))
+    new_image = Image.new('RGBA', (width, height),settings.BACKGROUND)
     logo_image = Image.new('RGBA', (width, height), (0, 0, 0, 0))
 
     ix = 0
