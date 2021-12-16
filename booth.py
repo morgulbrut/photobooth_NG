@@ -120,7 +120,7 @@ def merge_images(basewidth=settings.BASEWITH,
         i_t = Image.open(img)
         i_t.thumbnail((basewidth, basewidth), Image.ANTIALIAS)
         if(settings.CAMERA_TOPMOUNT):
-            rotated.append(ImageOps.flip(i_t))
+            rotated.append(i_t.rotate(180))
         else:
             rotated.append(ImageOps.exif_transpose(i_t))
 
