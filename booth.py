@@ -198,6 +198,7 @@ def start_delay(delay=settings.DELAY):
 
 def main():
 
+    clean()
     if settings.ON_RASPI:
         GPIO.setwarnings(False)
         GPIO.setmode(GPIO.BCM)
