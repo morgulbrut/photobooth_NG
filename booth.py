@@ -71,7 +71,9 @@ def take_pictures(number_of_pictures=settings.PICTURES):
             console.save_text(f'{settings.INSTALLATION_PATH}/logs/{date}.text')
             sys.exit(1)
 
-        for i in range(number_of_pictures):
+        i = 0
+
+        while i < number_of_pictures:
             try:
                 console.log('Capturing image')
                 flash.write(settings.RINGLIGHT_ON)
@@ -87,11 +89,11 @@ def take_pictures(number_of_pictures=settings.PICTURES):
                     file_path.folder, file_path.name, gp.GP_FILE_TYPE_NORMAL)
                 camera_file.save(target)
                 time.sleep(settings.INTERVAL)
+                i+=1
             except gp.GPhoto2Error:
                 flash.write(settings.RINGLIGHT_OFF)
-                console.log("Could not detect any camera")
+                console.log("Error tacking picture")
                 time.sleep(1)
-                i -=1
 
         camera.exit()
 
