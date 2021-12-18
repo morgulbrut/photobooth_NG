@@ -66,7 +66,13 @@ def take_pictures(number_of_pictures=settings.PICTURES):
         try:
             camera = gp.Camera()
             camera.init()
-            for i in range(number_of_pictures):
+        except gp.GPhoto2Error:
+            console.log("Could not detect any camera")
+            console.save_text(f'{settings.INSTALLATION_PATH}/logs/{date}.text')
+            sys.exit(1)
+
+        for i in range(number_of_pictures):
+            try:
                 console.log('Capturing image')
                 flash.write(settings.RINGLIGHT_ON)
                 GPIO.output(settings.LED_PIN, GPIO.LOW)
@@ -81,11 +87,13 @@ def take_pictures(number_of_pictures=settings.PICTURES):
                     file_path.folder, file_path.name, gp.GP_FILE_TYPE_NORMAL)
                 camera_file.save(target)
                 time.sleep(settings.INTERVAL)
-            camera.exit()
-        except gp.GPhoto2Error:
-            console.log("Could not detect any camera")
-            console.save_text(f'{settings.INSTALLATION_PATH}/logs/{date}.text')
-            sys.exit(1)
+            except gp.GPhoto2Error:
+                flash.write(settings.RINGLIGHT_OFF)
+                console.log("Could not detect any camera")
+                time.sleep(1)
+                i -=1
+
+        camera.exit()
 
     else:
         for i in range(number_of_pictures):
