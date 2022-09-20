@@ -9,6 +9,7 @@
 
 1. Install network-manager using `sudo apt install network-manager`
 2. Uninstall some not anymore used stuff `sudo apt purge openresolv dhcpcd5`
+3. Use nmtui
 
 ### install requierments
 
